@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a3214">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Mitra Enterprises – Agriculture Wholesale Dealers</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Tiro+Kannada&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+html{
+  scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%;
+  /* stop elastic bounce scroll pushing fixed elements */
+  overscroll-behavior:none;
+}
+
+body{
+  font-family:'Poppins',sans-serif;
+  background:#fafde8;
+  /* never show horizontal scroll */
+  overflow-x:hidden;
+  overscroll-behavior-y:none;
+}
+
+a{text-decoration:none;-webkit-tap-highlight-color:transparent;color:inherit;}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+img{display:block;width:100%;height:100%;object-fit:cover;}
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --green:#1a5c2a;
+  --gm:#2d8a3e;
+  --gb:#4caf50;
+  --gl:#a8e063;
+  --gold:#f5c518;
+  --orange:#ff7043;
+  --nh:56px;          /* navbar height */
+  --bh:50px;          /* bottom bar height */
+  --r:14px;
+}
+
+/* ============================================================
+   LANGUAGE TOGGLE
+   Only ONE of .en / .kn is shown at a time.
+   We start with lang-en on <body> set immediately via inline script.
+   ============================================================ */
+.kn{display:none;}
+body.lang-kn .en{display:none!important;}
+body.lang-kn .kn{display:revert!important;}
+
+/* ============================================================
+   NAV  — locked to its own GPU layer, never moves on scroll
+   ============================================================ */
+nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:900;
+  height:var(--nh);
+  background:rgba(8,38,14,.97);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  gap:8px;
+  /* GPU compositor layer — never repaints during scroll */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+
+.nav-logo{
+  font-family:'Playfair Display',serif;
+  font-weight:900;
+  font-size:1rem;
+  color:var(--gold);
+  flex:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.lang-toggle{
+  flex-shrink:0;
+  display:flex;
+  background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.25);
+  border-radius:30px;
+  overflow:hidden;
+}
+/* Fixed min-width so toggle never resizes when text changes */
+.lbtn{
+  min-width:36px;
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:700;
+  border:none;
+  background:transparent;
+  color:white;
+  white-space:nowrap;
+  touch-action:manipulation;
+  user-select:none;
+}
+.lbtn.active{
+  background:var(--gold);
+  color:var(--green);
+  border-radius:28px;
+}
+
+/* Hamburger — fixed 40×40 box, no shifting */
+.ham{
+  width:40px;height:40px;
+  flex-shrink:0;
+  background:none;border:none;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:5px;
+  touch-action:manipulation;
+  user-select:none;
+}
+.ham span{
+  display:block;
+  width:21px;height:2px;
+  background:white;border-radius:2px;
+  transition:transform .28s,opacity .28s;
+  transform-origin:center;
+  /* own layer so animation doesn't affect siblings */
+  will-change:transform;
+}
+.ham.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.ham.open span:nth-child(2){opacity:0;}
+.ham.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* Desktop nav links */
+.dlinks{display:none;gap:18px;list-style:none;}
+.dlinks a{color:rgba(255,255,255,.8);font-size:12.5px;font-weight:500;}
+.dlinks a:hover{color:var(--gold);}
+
+/* ============================================================
+   DRAWER  — slides in/out on its own GPU layer
+   ============================================================ */
+.drawer{
+  position:fixed;
+  top:var(--nh);left:0;right:0;
+  background:rgba(5,24,10,.97);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  z-index:850;
+  /* hidden above viewport */
+  transform:translateY(-110%) translateZ(0);
+  -webkit-transform:translateY(-110%) translateZ(0);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  border-bottom:2px solid var(--gold);
+  will-change:transform;
+}
+.drawer.open{
+  transform:translateY(0) translateZ(0);
+  -webkit-transform:translateY(0) translateZ(0);
+}
+.drawer a{
+  display:flex;align-items:center;gap:12px;
+  padding:15px 16px;
+  color:rgba(255,255,255,.88);
+  font-size:15px;font-weight:600;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  touch-action:manipulation;
+  user-select:none;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  /* Static height — NOT 100vh/svh/dvh which change on scroll */
+  min-height:100vh;
+  padding:calc(var(--nh) + 40px) 16px calc(var(--bh) + 32px);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(155deg,#052b0e 0%,#1b6b30 55%,#0a3416 100%);
+  /* contain all child animations so they never paint outside */
+  contain:layout style paint;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:34px 34px;
+  pointer-events:none;
+}
+
+/* Floating leaves — isolated, % based to avoid vh recalculation */
+.leaf{
+  position:absolute;
+  opacity:.08;
+  pointer-events:none;
+  font-size:1.4rem;
+  animation:rise linear infinite;
+  will-change:transform;
+  backface-visibility:hidden;
+}
+@keyframes rise{
+  0%  {transform:translateY(120%) rotate(0deg);  opacity:0;}
+  8%  {opacity:.08;}
+  90% {opacity:.08;}
+  100%{transform:translateY(-120%) rotate(380deg);opacity:0;}
+}
+
+.hinner{
+  position:relative;z-index:2;
+  width:100%;max-width:560px;
+  animation:fadeUp .8s ease-out both;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+
+.hbadge{
+  width:74px;height:74px;border-radius:50%;
+  background:linear-gradient(135deg,#142a1a,#2a5e32);
+  border:3px solid var(--gold);
+  margin:0 auto 16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.85rem;
+  animation:glowPulse 3s ease-in-out infinite;
+  will-change:filter;
+  backface-visibility:hidden;
+}
+/* filter:drop-shadow runs on GPU — no layout repaint */
+@keyframes glowPulse{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(245,197,24,.4));}
+  50%     {filter:drop-shadow(0 0 24px rgba(245,197,24,.85));}
+}
+
+.heyline{
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);font-weight:700;margin-bottom:10px;
+  display:block;
+}
+.heyline.kn{letter-spacing:0;font-family:'Tiro Kannada',serif;font-size:12px;}
+
+.htitle{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.95rem,8.5vw,4.2rem);
+  font-weight:900;color:#fff;line-height:1.05;
+}
+.htitle span{color:var(--gold);display:block;}
+.htitle.kn{font-family:'Tiro Kannada',serif;font-size:clamp(1.7rem,7.5vw,3.6rem);line-height:1.2;}
+
+.htagline{
+  margin-top:13px;
+  font-size:clamp(.8rem,3.3vw,.92rem);
+  color:rgba(255,255,255,.78);line-height:1.8;
+}
+.htagline.kn{font-family:'Tiro Kannada',serif;}
+
+.gpill{
+  display:inline-block;margin-top:14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:30px;padding:6px 16px;
+  color:rgba(255,255,255,.78);font-size:10.5px;letter-spacing:.6px;
+}
+
+.hcta{
+  margin-top:22px;
+  display:flex;flex-direction:column;
+  gap:11px;align-items:center;
+  width:100%;
+}
+/* Hero buttons: fixed height, no transform transitions */
+.hbtn1,.hbtn2{
+  width:min(288px,100%);
+  height:50px;
+  border-radius:50px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'Poppins',sans-serif;
+  font-size:14.5px;font-weight:700;
+  border:none;
+  touch-action:manipulation;
+  user-select:none;
+  flex-shrink:0;
+}
+.hbtn1{
+  background:linear-gradient(135deg,var(--gold),#ce8f00);
+  color:var(--green);
+  box-shadow:0 4px 18px rgba(245,197,24,.3);
+}
+.hbtn2{
+  background:transparent;color:#fff;
+  border:2px solid rgba(255,255,255,.38);
+}
+
+/* Scroll hint — own layer so bob never shifts page */
+.hscroll{
+  position:absolute;bottom:16px;left:50%;
+  transform:translateX(-50%);
+  color:rgba(255,255,255,.3);font-size:9px;letter-spacing:2px;
+  pointer-events:none;
+  animation:bob 2.4s ease-in-out infinite;
+  will-change:transform;
+  backface-visibility:hidden;
+}
+@keyframes bob{
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%     {transform:translateX(-50%) translateY(-6px);}
+}
+
+/* ============================================================
+   MARQUEE  — single-track approach, JS swaps content on lang change
+   Fixed height so it NEVER collapses or double-stacks
+   ============================================================ */
+.mbar{
+  height:32px;
+  background:var(--gold);
+  overflow:hidden;
+  position:relative;
+}
+.mtrack{
+  position:absolute;
+  top:0;left:0;
+  height:32px;
+  white-space:nowrap;
+  display:flex;align-items:center;
+  font-size:11.5px;font-weight:700;color:var(--green);letter-spacing:.4px;
+  /* start just off right edge */
+  transform:translateX(100vw);
+  animation:marqueeScroll 28s linear infinite;
+  will-change:transform;
+  backface-visibility:hidden;
+}
+.mtrack.kn-track{font-family:'Tiro Kannada',serif;font-size:12px;letter-spacing:0;}
+@keyframes marqueeScroll{
+  0%  {transform:translateX(100vw);}
+  100%{transform:translateX(-100%);}
+}
+
+/* ============================================================
+   STATS
+   ============================================================ */
+.stats{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  background:linear-gradient(135deg,var(--green),#215c30);
+  border-bottom:3px solid var(--gold);
+}
+.stat{
+  text-align:center;padding:16px 6px;
+  border-right:1px solid rgba(255,255,255,.1);
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.stat:nth-child(2n){border-right:none;}
+.stat:nth-child(3),.stat:nth-child(4){border-bottom:none;}
+.stn{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--gold);line-height:1;}
+.stl{font-size:9.5px;color:rgba(255,255,255,.68);letter-spacing:.7px;text-transform:uppercase;margin-top:3px;}
+.stl.kn{font-family:'Tiro Kannada',serif;letter-spacing:0;font-size:11px;}
+
+/* ============================================================
+   SECTION COMMONS
+   ============================================================ */
+.sec{padding:48px 16px;}
+.sh{text-align:center;margin-bottom:26px;}
+.sh .eye{
+  display:block;font-size:10px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gm);margin-bottom:7px;
+}
+.sh .eye.kn{letter-spacing:0;font-family:'Tiro Kannada',serif;font-size:12px;}
+.sh h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.45rem,5.2vw,2.3rem);
+  color:var(--green);font-weight:900;line-height:1.2;
+}
+.sh h2.kn{font-family:'Tiro Kannada',serif;font-size:clamp(1.3rem,4.8vw,2rem);}
+.divbar{width:42px;height:3px;background:linear-gradient(to right,var(--gold),var(--orange));margin:9px auto 0;border-radius:2px;}
+
+/* ============================================================
+   REVEAL ON SCROLL
+   ============================================================ */
+.rv{
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity .5s ease, transform .5s ease;
+  will-change:opacity,transform;
+}
+.rv.visible{
+  opacity:1;
+  transform:translateY(0);
+  will-change:auto;
+}
+
+/* ============================================================
+   PRODUCTS
+   ============================================================ */
+.prod-sec{background:linear-gradient(175deg,#eff8f1,#e2f0e4);}
+.pgrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+  max-width:1100px;margin:0 auto;
+}
+.pcard{
+  background:#fff;
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.07);
+  border:1px solid rgba(76,175,80,.12);
+  display:flex;flex-direction:column;
+}
+.pico-wrap{
+  height:90px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;position:relative;flex-shrink:0;
+}
+.pico-wrap::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(255,255,255,.88));
+}
+.ptag{
+  position:absolute;top:7px;right:7px;z-index:1;
+  background:var(--gold);color:var(--green);
+  font-size:8px;font-weight:700;
+  padding:2px 7px;border-radius:10px;text-transform:uppercase;
+}
+.ptag.kn{font-family:'Tiro Kannada',serif;font-size:9.5px;letter-spacing:0;}
+.pbody{padding:10px 11px 13px;flex:1;}
+.pname{
+  font-family:'Playfair Display',serif;
+  font-size:.85rem;font-weight:700;color:var(--green);
+  margin-bottom:3px;line-height:1.3;
+}
+.pname.kn{font-family:'Tiro Kannada',serif;font-size:.82rem;}
+.pdesc{font-size:10px;color:#777;line-height:1.5;}
+.pdesc.kn{font-family:'Tiro Kannada',serif;font-size:11px;}
+
+/* ============================================================
+   GALLERY / CAROUSEL
+   ============================================================ */
+.gal-sec{background:#0b0b0b;padding:48px 16px;}
+.gal-sec .eye{color:var(--gl);}
+.gal-sec h2{color:#fff;}
+
+.cbox{max-width:860px;margin:0 auto;}
+
+/* Stage: position:relative so arrows anchor to the image area */
+.cstage{
+  position:relative;
+  border-radius:16px;overflow:hidden;
+  background:#181818;
+  width:100%;aspect-ratio:4/3;
+  box-shadow:0 12px 44px rgba(0,0,0,.68);
+}
+.cslide{
+  position:absolute;inset:0;
+  opacity:0;transition:opacity .45s ease;
+}
+.cslide.on{opacity:1;}
+.cslide img{width:100%;height:100%;object-fit:cover;display:block;}
+.coverlay{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,rgba(0,0,0,.76),transparent);
+  padding:30px 14px 14px;
+  pointer-events:none;
+}
+.ccat{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:3px;}
+.ccat.kn{font-family:'Tiro Kannada',serif;letter-spacing:0;font-size:11px;text-transform:none;}
+.ctitle{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;line-height:1.3;}
+.ctitle.kn{font-family:'Tiro Kannada',serif;font-size:.9rem;}
+
+.ccount{
+  position:absolute;top:11px;right:11px;z-index:6;
+  background:rgba(0,0,0,.55);color:#fff;
+  font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:18px;
+  backdrop-filter:blur(4px);
+  pointer-events:none;
+}
+.cprog{
+  position:absolute;bottom:0;left:0;height:3px;
+  background:var(--gold);z-index:6;
+  border-radius:0 2px 2px 0;
+  transition:width .1s linear;
+  pointer-events:none;
+}
+.cpause{
+  position:absolute;bottom:9px;right:10px;z-index:7;
+  width:26px;height:26px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.52);
+  color:#fff;font-size:10px;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+  touch-action:manipulation;
+  user-select:none;
+  transition:background .2s;
+  line-height:1;
+}
+.cpause:hover{background:rgba(45,138,62,.85);}
+.cpause.paused{background:rgba(245,197,24,.85);color:var(--green);}
+
+/* Arrows inside .cstage so top:50% = 50% of image, never the whole box */
+.carrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:10;
+  width:38px;height:38px;
+  border-radius:50%;border:none;
+  background:rgba(0,0,0,.6);color:#fff;
+  font-size:22px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+  touch-action:manipulation;
+  user-select:none;
+}
+.cprev{left:8px;}
+.cnext{right:8px;}
+.carrow:hover{background:rgba(45,138,62,.85);}
+
+/* Dots — fixed size, box-shadow highlight (no scale/transform) */
+.cdots{display:flex;justify-content:center;gap:7px;margin-top:14px;}
+.cdot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.2);border:none;padding:0;
+  flex-shrink:0;cursor:pointer;
+  transition:background .2s,box-shadow .2s;
+  touch-action:manipulation;
+}
+.cdot.on{background:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.3);}
+
+/* Thumbnails — border change only, no scale */
+.cthumbs{
+  display:flex;gap:7px;
+  margin-top:9px;
+  overflow-x:auto;
+  padding:2px 1px 6px;
+  scrollbar-width:none;
+}
+.cthumbs::-webkit-scrollbar{display:none;}
+.cthumb{
+  flex-shrink:0;
+  width:66px;height:48px;
+  border-radius:8px;overflow:hidden;
+  border:2px solid transparent;
+  opacity:.5;cursor:pointer;
+  transition:border-color .2s,opacity .2s;
+  touch-action:manipulation;
+}
+.cthumb.on{border-color:var(--gold);opacity:1;}
+.cthumb img{width:100%;height:100%;object-fit:cover;display:block;}
+
+/* ============================================================
+   WHY US
+   ============================================================ */
+.why-sec{
+  background:linear-gradient(140deg,var(--green),#071e0d);
+  position:relative;overflow:hidden;
+}
+.why-sec::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.03) 1px,transparent 0);
+  background-size:30px 30px;
+  pointer-events:none;
+}
+.why-sec .eye{color:var(--gl);}
+.why-sec h2{color:#fff;}
+.wgrid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:11px;max-width:1100px;margin:0 auto;
+  position:relative;z-index:1;
+}
+.wcard{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r);
+  padding:18px 12px;text-align:center;
+}
+.wico{font-size:1.8rem;display:block;margin-bottom:8px;}
+.wtitle{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--gold);margin-bottom:5px;}
+.wtitle.kn{font-family:'Tiro Kannada',serif;font-size:.86rem;}
+.wtxt{font-size:10.5px;color:rgba(255,255,255,.68);line-height:1.6;}
+.wtxt.kn{font-family:'Tiro Kannada',serif;}
+
+/* ============================================================
+   CONTACT
+   ============================================================ */
+.con-sec{background:linear-gradient(160deg,#f6fbe6,#eef7e7);}
+.con-inner{max-width:860px;margin:0 auto;}
+.ccard{
+  background:#fff;border-radius:16px;
+  padding:18px 15px;
+  box-shadow:0 3px 18px rgba(0,0,0,.07);
+  border:1px solid rgba(76,175,80,.1);
+  margin-bottom:14px;
+}
+.crow{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 0;
+  border-bottom:1px solid #f2f2f2;
+}
+.crow:last-child{border-bottom:none;padding-bottom:0;}
+.crow:first-child{padding-top:0;}
+.cico{
+  width:38px;height:38px;flex-shrink:0;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;
+}
+.ig {background:#e8f5e9;} .io{background:#fff3e0;}
+.ib {background:#e3f2fd;} .igl{background:#fffde7;}
+.clbl{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+.clbl.kn{font-family:'Tiro Kannada',serif;letter-spacing:0;font-size:10.5px;}
+.cval{font-size:14px;font-weight:600;color:var(--green);margin-top:1px;}
+.cval a{color:var(--green);}
+
+.ctabox{
+  background:linear-gradient(135deg,var(--green),var(--gm));
+  border-radius:18px;padding:24px 16px;
+  text-align:center;color:#fff;
+  position:relative;overflow:hidden;
+}
+.ctabox::before{content:'🌾';position:absolute;font-size:5rem;opacity:.07;bottom:-8px;right:-4px;pointer-events:none;}
+.ctabox h3{font-family:'Playfair Display',serif;font-size:1.38rem;margin-bottom:7px;font-weight:900;}
+.ctabox h3.kn{font-family:'Tiro Kannada',serif;font-size:1.28rem;}
+.ctabox p{font-size:12px;color:rgba(255,255,255,.78);margin-bottom:16px;line-height:1.65;}
+.ctabox p.kn{font-family:'Tiro Kannada',serif;}
+
+.cbtns{display:flex;flex-direction:column;gap:9px;}
+/* Contact buttons: fixed height, no transforms */
+.cbtn{
+  width:100%;height:46px;
+  border:none;border-radius:50px;
+  font-family:'Poppins',sans-serif;
+  font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  touch-action:manipulation;
+  user-select:none;
+  flex-shrink:0;
+}
+.cbtn-y {background:var(--gold);color:var(--green);}
+.cbtn-y2{background:#c98f00;color:var(--green);}
+.cbtn-g {background:#25d366;color:#fff;}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{
+  background:#061309;
+  /* bottom padding = bbar height + safe area + breathing room */
+  padding:28px 16px calc(var(--bh) + env(safe-area-inset-bottom) + 16px);
+  text-align:center;
+}
+.flogo{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:900;color:var(--gold);}
+.fsub{color:rgba(255,255,255,.38);font-size:11.5px;margin-top:7px;line-height:1.8;}
+.fsub.kn{font-family:'Tiro Kannada',serif;}
+.fcopy{color:rgba(255,255,255,.18);font-size:10.5px;margin-top:9px;}
+
+/* ============================================================
+   FLOATING ACTION BUTTONS
+   Each button has a fixed 56×56 wrapper that absorbs the
+   ring overflow — so the ring animation NEVER shifts siblings
+   ============================================================ */
+.fwrap{
+  position:fixed;
+  /* Sits above bbar with consistent gap */
+  bottom:calc(var(--bh) + env(safe-area-inset-bottom) + 12px);
+  right:13px;
+  z-index:990;
+  display:flex;flex-direction:column;
+  align-items:center;
+  gap:10px;
+  /* Own GPU layer — completely decoupled from scroll */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+
+/* Fixed-size wrapper — absorbs ring overflow */
+.fab-wrap{
+  width:56px;height:56px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+
+.fab{
+  width:48px;height:48px;
+  border-radius:50%;border:none;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+  position:relative;z-index:1;
+  flex-shrink:0;
+  touch-action:manipulation;
+  user-select:none;
+}
+.fab-wa{background:#25d366;}
+.fab-call{background:linear-gradient(135deg,var(--gm),var(--green));}
+
+/* Ring is inside .fab-wrap, scales within the 56px box,
+   never touches .fwrap layout at all */
+.ring{
+  position:absolute;
+  inset:4px;           /* starts at same size as .fab */
+  border-radius:50%;
+  border:2px solid var(--gb);
+  animation:ringPulse 2s ease-out infinite;
+  pointer-events:none;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+@keyframes ringPulse{
+  0%  {transform:scale(1);  opacity:.7;}
+  100%{transform:scale(1.5);opacity:0;}
+}
+
+/* ============================================================
+   BOTTOM BAR  — locked height, GPU layer
+   ============================================================ */
+.bbar{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:880;
+  display:flex;
+  /* Exact known height — never reflows */
+  height:calc(var(--bh) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -2px 12px rgba(0,0,0,.15);
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+.bbar a{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:14px;font-weight:700;
+  touch-action:manipulation;
+  user-select:none;
+}
+.bc{background:var(--gm);color:#fff;}
+.bw{background:#25d366;color:#fff;}
+
+/* ============================================================
+   DESKTOP  ≥768px
+   ============================================================ */
+@media(min-width:768px){
+  nav{padding:0 24px;}
+  .ham,.bbar{display:none!important;}
+  .drawer{display:none!important;}
+  .dlinks{display:flex;}
+  .fwrap{bottom:24px;}
+  footer{padding-bottom:32px;}
+  .nav-logo{font-size:1.1rem;}
+
+  .stats{grid-template-columns:repeat(4,1fr);}
+  .stat{border-bottom:none!important;}
+  .stat:nth-child(2n){border-right:1px solid rgba(255,255,255,.1)!important;}
+  .stat:last-child{border-right:none!important;}
+
+  .sec{padding:60px 24px;}
+  .gal-sec{padding:60px 24px;}
+
+  .pgrid{grid-template-columns:repeat(3,1fr);gap:18px;}
+  .pico-wrap{height:124px;font-size:3.2rem;}
+  .pbody{padding:13px 15px 17px;}
+  .pname{font-size:.96rem;}
+  .pdesc{font-size:11.5px;}
+
+  .wgrid{grid-template-columns:repeat(4,1fr);gap:16px;}
+
+  .cstage{aspect-ratio:16/9;}
+  .cthumb{width:88px;height:62px;}
+  .carrow{width:46px;height:46px;font-size:24px;}
+  .cprev{left:12px;}
+  .cnext{right:12px;}
+  .ctitle{font-size:1.1rem;}
+  .coverlay{padding:36px 20px 18px;}
+
+  .con-inner{display:flex;gap:24px;align-items:flex-start;}
+  .con-inner>*{flex:1;}
+  .ccard{margin-bottom:0;}
+
+  .hcta{flex-direction:row;justify-content:center;}
+  .hbtn1,.hbtn2{width:auto;min-width:170px;}
+
+  .hero{min-height:100vh;padding-bottom:64px;}
+}
+</style>
+</head>
+
+<!-- Set lang immediately before body renders to avoid flash -->
+<script>document.documentElement.className='lang-en';</script>
+
+<body class="lang-en">
+
+<!-- ============================================================
+     FLOATING LEAVES (inside hero via CSS contain, so they can't
+     affect layout outside)
+     ============================================================ -->
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🌿 Mitra Enterprises</div>
+  <ul class="dlinks">
+    <li><a href="#products"><span class="en">Products</span><span class="kn">ಉತ್ಪನ್ನ</span></a></li>
+    <li><a href="#gallery"><span class="en">Gallery</span><span class="kn">ಗ್ಯಾಲರಿ</span></a></li>
+    <li><a href="#why"><span class="en">Why Us</span><span class="kn">ನಮ್ಮ ಬಗ್ಗೆ</span></a></li>
+    <li><a href="#contact"><span class="en">Contact</span><span class="kn">ಸಂಪರ್ಕ</span></a></li>
+  </ul>
+  <div class="lang-toggle">
+    <button class="lbtn active" id="ben" onclick="setLang('en')">EN</button>
+    <button class="lbtn"        id="bkn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+  </div>
+  <button class="ham" id="ham" onclick="togMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <a href="#products" onclick="closeMenu()"><span>🌾</span><span class="en">Products</span><span class="kn">ಉತ್ಪನ್ನಗಳು</span></a>
+  <a href="#gallery"  onclick="closeMenu()"><span>📸</span><span class="en">Shop Gallery</span><span class="kn">ಶಾಪ್ ಗ್ಯಾಲರಿ</span></a>
+  <a href="#why"      onclick="closeMenu()"><span>✅</span><span class="en">Why Choose Us</span><span class="kn">ನಮ್ಮ ಬಗ್ಗೆ</span></a>
+  <a href="#contact"  onclick="closeMenu()"><span>📞</span><span class="en">Contact</span><span class="kn">ಸಂಪರ್ಕ</span></a>
+  <a href="tel:7259750939"><span>📲</span><span class="en">Call: 7259750939</span><span class="kn">ಕರೆ: 7259750939</span></a>
+  <a href="https://wa.me/917259750939" target="_blank" rel="noopener"><span>💬</span><span class="en">WhatsApp</span><span class="kn">WhatsApp ಮಾಡಿ</span></a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <!-- Leaves are inside hero so contain:paint keeps them here -->
+  <span class="leaf" style="left:5%;animation-duration:13s;">🌿</span>
+  <span class="leaf" style="left:24%;animation-duration:17s;animation-delay:4s;font-size:1.6rem;">🍃</span>
+  <span class="leaf" style="left:54%;animation-duration:11s;animation-delay:7s;font-size:1.1rem;">🌱</span>
+  <span class="leaf" style="left:77%;animation-duration:15s;animation-delay:2s;font-size:1.8rem;">🍀</span>
+  <span class="leaf" style="left:91%;animation-duration:12s;animation-delay:9s;">🌾</span>
+
+  <div class="hinner">
+    <div class="hbadge">🌿</div>
+    <span class="heyline en">Agriculture Wholesale Dealers · Salhalli</span>
+    <span class="heyline kn">ಕೃಷಿ ಸಗಟು ವ್ಯಾಪಾರಿಗಳು · ಸಾಲಹಳ್ಳಿ</span>
+    <h1 class="htitle en">MITRA <span>ENTERPRISES</span></h1>
+    <h1 class="htitle kn">ಮಿತ್ರಾ <span>ಎಂಟರ್‌ಪ್ರೈಸಸ್</span></h1>
+    <p class="htagline en">Your trusted wholesale partner for organic &amp; chemical pesticides, quality seeds and fertilizers.</p>
+    <p class="htagline kn">ಸಾವಯವ ಮತ್ತು ರಾಸಾಯನಿಕ ಕೀಟನಾಶಕ, ಬೀಜ ಹಾಗೂ ಗೊಬ್ಬರ — ಗುಣಮಟ್ಟ ಖಾತ್ರಿ.</p>
+    <div class="gpill">GSTIN: 29ASNPH4030N1ZD</div>
+    <div class="hcta">
+      <a href="tel:7259750939" class="hbtn1">📞 <span class="en">Call Now</span><span class="kn">ಈಗಲೇ ಕರೆ ಮಾಡಿ</span></a>
+      <a href="https://wa.me/917259750939?text=Hello%20Mitra%20Enterprises" target="_blank" rel="noopener" class="hbtn2">💬 <span class="en">WhatsApp</span><span class="kn">WhatsApp ಮಾಡಿ</span></a>
+    </div>
+  </div>
+  <div class="hscroll" aria-hidden="true">▼ SCROLL ▼</div>
+</section>
+
+<!-- MARQUEE — single track, JS updates text on lang switch -->
+<div class="mbar" aria-hidden="true">
+  <div class="mtrack" id="mtrack">
+    🌾 WHOLESALE DEALER &nbsp;•&nbsp; 🧪 ALL PESTICIDES &nbsp;•&nbsp; 🌱 ORGANIC &amp; CHEMICAL FERTILIZERS &nbsp;•&nbsp; 🫘 QUALITY SEEDS &nbsp;•&nbsp; 📦 BULK ORDERS &nbsp;•&nbsp; ✅ GST REGISTERED &nbsp;•&nbsp; 📞 7259750939 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stn">500+</div><div class="stl en">Happy Farmers</div><div class="stl kn">ಸಂತೃಪ್ತ ರೈತರು</div></div>
+  <div class="stat"><div class="stn">50+</div> <div class="stl en">Products</div>      <div class="stl kn">ಉತ್ಪನ್ನ ವಿಧ</div></div>
+  <div class="stat"><div class="stn">10+</div> <div class="stl en">Years Exp.</div>    <div class="stl kn">ವರ್ಷ ಅನುಭವ</div></div>
+  <div class="stat"><div class="stn">24/7</div><div class="stl en">Support</div>       <div class="stl kn">ಸೇವೆ</div></div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="prod-sec sec" id="products">
+  <div class="sh rv">
+    <span class="eye en">What We Offer</span><span class="eye kn">ನಾವು ಒದಗಿಸುವ ಉತ್ಪನ್ನಗಳು</span>
+    <h2 class="en">Our Product Range</h2><h2 class="kn">ನಮ್ಮ ಉತ್ಪನ್ನ ಶ್ರೇಣಿ</h2>
+    <div class="divbar"></div>
+  </div>
+  <div class="pgrid">
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);">🌿<span class="ptag en">Organic</span><span class="ptag kn">ಸಾವಯವ</span></div>
+      <div class="pbody"><h3 class="pname en">Organic Pesticides</h3><h3 class="pname kn">ಸಾವಯವ ಕೀಟನಾಶಕ</h3><p class="pdesc en">Natural, safe pest control for healthy crops.</p><p class="pdesc kn">ನೈಸರ್ಗಿಕ ಕೀಟ ನಿಯಂತ್ರಣ.</p></div>
+    </div>
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);">🧪<span class="ptag en">Chemical</span><span class="ptag kn">ರಾಸಾಯನಿಕ</span></div>
+      <div class="pbody"><h3 class="pname en">Chemical Pesticides</h3><h3 class="pname kn">ರಾಸಾಯನಿಕ ಕೀಟನಾಶಕ</h3><p class="pdesc en">Powerful pest &amp; disease control.</p><p class="pdesc kn">ಪರಿಣಾಮಕಾರಿ ನಿಯಂತ್ರಣ.</p></div>
+    </div>
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#f3e5f5,#e1bee7);">🫘<span class="ptag en">Seeds</span><span class="ptag kn">ಬೀಜ</span></div>
+      <div class="pbody"><h3 class="pname en">Quality Seeds</h3><h3 class="pname kn">ಗುಣಮಟ್ಟದ ಬೀಜ</h3><p class="pdesc en">Certified high-yield seeds for all crops.</p><p class="pdesc kn">ಪ್ರಮಾಣೀಕೃತ ಬೀಜಗಳು.</p></div>
+    </div>
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#e0f7fa,#b2ebf2);">🌱<span class="ptag en">Fertilizer</span><span class="ptag kn">ಗೊಬ್ಬರ</span></div>
+      <div class="pbody"><h3 class="pname en">Fertilizers</h3><h3 class="pname kn">ಗೊಬ್ಬರ</h3><p class="pdesc en">Boost soil health &amp; maximize yield.</p><p class="pdesc kn">ಇಳುವರಿ ಹೆಚ್ಚಿಸಲು.</p></div>
+    </div>
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);">🌾<span class="ptag en">Crop Care</span><span class="ptag kn">ಬೆಳೆ ರಕ್ಷಣೆ</span></div>
+      <div class="pbody"><h3 class="pname en">Crop Protection</h3><h3 class="pname kn">ಬೆಳೆ ರಕ್ಷಣೆ</h3><p class="pdesc en">Fungicides &amp; herbicides.</p><p class="pdesc kn">ಶಿಲೀಂಧ್ರ ಮತ್ತು ಕಳೆನಾಶಕ.</p></div>
+    </div>
+    <div class="pcard rv">
+      <div class="pico-wrap" style="background:linear-gradient(135deg,#fffde7,#fff9c4);">💧<span class="ptag en">Nutrition</span><span class="ptag kn">ಪೋಷಣೆ</span></div>
+      <div class="pbody"><h3 class="pname en">Micro Nutrients</h3><h3 class="pname kn">ಸೂಕ್ಷ್ಮ ಪೋಷಕಾಂಶ</h3><p class="pdesc en">Essential nutrients for plant growth.</p><p class="pdesc kn">ಸಸ್ಯ ಪೋಷಕಾಂಶ.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gal-sec" id="gallery">
+  <div class="sh rv">
+    <span class="eye en">Our Shop &amp; Products</span>
+    <span class="eye kn">ನಮ್ಮ ಶಾಪ್ ಮತ್ತು ಉತ್ಪನ್ನಗಳು</span>
+    <h2 class="en">Shop Gallery</h2>
+    <h2 class="kn">ಶಾಪ್ ಗ್ಯಾಲರಿ</h2>
+    <div class="divbar"></div>
+  </div>
+  <div class="cbox">
+    <div class="cstage" id="cstage">
+      <span class="ccount" id="ccount">1 / 5</span>
+      <div  class="cprog"  id="cprog"></div>
+      <button class="cpause" id="cpause" onclick="togglePause()" aria-label="Pause slideshow">⏸</button>
+      <button class="carrow cprev" onclick="cm(-1)" aria-label="Previous slide">&#8249;</button>
+      <button class="carrow cnext" onclick="cm(1)"  aria-label="Next slide">&#8250;</button>
+    </div>
+    <div class="cdots"   id="cdots"></div>
+    <div class="cthumbs" id="cthumbs"></div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-sec sec" id="why">
+  <div class="sh rv">
+    <span class="eye en">The Mitra Advantage</span><span class="eye kn">ಮಿತ್ರ ಅನುಕೂಲ</span>
+    <h2 class="en">Why Choose Us?</h2><h2 class="kn">ನಮ್ಮನ್ನೇ ಏಕೆ?</h2>
+    <div class="divbar"></div>
+  </div>
+  <div class="wgrid">
+    <div class="wcard rv"><span class="wico">✅</span><h4 class="wtitle en">GST Registered</h4><h4 class="wtitle kn">GST ನೋಂದಾಯಿತ</h4><p class="wtxt en">Proper bills for all purchases. GSTIN verified.</p><p class="wtxt kn">ಸರಿಯಾದ ಬಿಲ್ ದೊರೆಯುತ್ತದೆ.</p></div>
+    <div class="wcard rv"><span class="wico">🏷️</span><h4 class="wtitle en">Best Prices</h4><h4 class="wtitle kn">ಅತ್ಯುತ್ತಮ ಬೆಲೆ</h4><p class="wtxt en">Direct wholesale pricing for farmers.</p><p class="wtxt kn">ರೈತರಿಗೆ ಸಗಟು ಬೆಲೆ.</p></div>
+    <div class="wcard rv"><span class="wico">🌿</span><h4 class="wtitle en">Certified</h4><h4 class="wtitle kn">ಪ್ರಮಾಣೀಕೃತ</h4><p class="wtxt en">Licensed &amp; certified trusted brands.</p><p class="wtxt kn">ಪ್ರಮಾಣೀಕೃತ ಉತ್ಪನ್ನ.</p></div>
+    <div class="wcard rv"><span class="wico">🚚</span><h4 class="wtitle en">Fast Delivery</h4><h4 class="wtitle kn">ತ್ವರಿತ ವಿತರಣೆ</h4><p class="wtxt en">Quick delivery. Bulk orders welcome.</p><p class="wtxt kn">ತ್ವರಿತ ವಿತರಣೆ.</p></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="con-sec sec" id="contact">
+  <div class="sh rv">
+    <span class="eye en">Get In Touch</span><span class="eye kn">ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ</span>
+    <h2 class="en">Contact Us</h2><h2 class="kn">ಸಂಪರ್ಕ ವಿವರ</h2>
+    <div class="divbar"></div>
+  </div>
+  <div class="con-inner">
+    <div class="ccard rv">
+      <div class="crow"><div class="cico ig">👤</div><div><div class="clbl en">Owner</div><div class="clbl kn">ಮಾಲೀಕ</div><div class="cval">Mahesh Hiremath</div></div></div>
+      <div class="crow"><div class="cico io">📞</div><div><div class="clbl en">Phone</div><div class="clbl kn">ದೂರವಾಣಿ</div><div class="cval"><a href="tel:7259750939">7259750939</a></div></div></div>
+      <div class="crow"><div class="cico ib">📱</div><div><div class="clbl en">Alternate</div><div class="clbl kn">ಪರ್ಯಾಯ</div><div class="cval"><a href="tel:9035388460">9035388460</a></div></div></div>
+      <div class="crow"><div class="cico ig">📍</div><div><div class="clbl en">Address</div><div class="clbl kn">ವಿಳಾಸ</div><div class="cval en">Salhalli – 591130</div><div class="cval kn">ಸಾಲಹಳ್ಳಿ – 591130</div></div></div>
+      <div class="crow"><div class="cico igl">🏛️</div><div><div class="clbl">GSTIN</div><div class="cval" style="font-size:12px;letter-spacing:.5px;">29ASNPH4030N1ZD</div></div></div>
+    </div>
+    <div class="ctabox rv">
+      <h3 class="en">Order Now!</h3><h3 class="kn">ಈಗಲೇ ಆರ್ಡರ್ ಮಾಡಿ!</h3>
+      <p class="en">Bulk orders or inquiries — call or WhatsApp!</p>
+      <p class="kn">ದೊಡ್ಡ ಆರ್ಡರ್ ಅಥವಾ ಮಾಹಿತಿಗೆ ಕರೆ ಮಾಡಿ.</p>
+      <div class="cbtns">
+        <a href="tel:7259750939" class="cbtn cbtn-y">📞 <span class="en">Call: 7259750939</span><span class="kn">ಕರೆ: 7259750939</span></a>
+        <a href="tel:9035388460" class="cbtn cbtn-y2">📞 <span class="en">Call: 9035388460</span><span class="kn">ಕರೆ: 9035388460</span></a>
+        <a href="https://wa.me/917259750939?text=Hello%20Mitra%20Enterprises" target="_blank" rel="noopener" class="cbtn cbtn-g">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          <span class="en">WhatsApp Us</span><span class="kn">WhatsApp ಮಾಡಿ</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="flogo">🌿 Mitra Enterprises</div>
+  <p class="fsub en">Agriculture Wholesale Dealers · Salhalli – 591130<br>Mahesh Hiremath &nbsp;|&nbsp; 7259750939 &nbsp;|&nbsp; 9035388460</p>
+  <p class="fsub kn">ಕೃಷಿ ಸಗಟು ವ್ಯಾಪಾರಿಗಳು · ಸಾಲಹಳ್ಳಿ – 591130<br>ಮಹೇಶ ಹಿರೇಮಠ &nbsp;|&nbsp; 7259750939 &nbsp;|&nbsp; 9035388460</p>
+  <p class="fcopy">© 2026 Mitra Enterprises · GSTIN: 29ASNPH4030N1ZD</p>
+</footer>
+
+<!-- FLOATING ACTION BUTTONS -->
+<div class="fwrap">
+  <!-- WhatsApp -->
+  <div class="fab-wrap">
+    <a href="https://wa.me/917259750939?text=Hello%20Mitra%20Enterprises" target="_blank" rel="noopener" class="fab fab-wa" aria-label="WhatsApp">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+  </div>
+  <!-- Call (with ring pulse) -->
+  <div class="fab-wrap">
+    <div class="ring" aria-hidden="true"></div>
+    <a href="tel:7259750939" class="fab fab-call" aria-label="Call us">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bbar">
+  <a href="tel:7259750939" class="bc">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+    <span class="en">Call Now</span><span class="kn">ಕರೆ ಮಾಡಿ</span>
+  </a>
+  <a href="https://wa.me/917259750939?text=Hello%20Mitra%20Enterprises" target="_blank" rel="noopener" class="bw">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span class="en">WhatsApp</span><span class="kn">WhatsApp</span>
+  </a>
+</div>
+
+<script>
+/* =================================================================
+   LANGUAGE
+   setLang() swaps body class, toggles buttons, updates marquee text
+   ================================================================= */
+const MARQUEE_TEXT = {
+  en: '🌾 WHOLESALE DEALER \u00a0•\u00a0 🧪 ALL PESTICIDES \u00a0•\u00a0 🌱 ORGANIC & CHEMICAL FERTILIZERS \u00a0•\u00a0 🫘 QUALITY SEEDS \u00a0•\u00a0 📦 BULK ORDERS \u00a0•\u00a0 ✅ GST REGISTERED \u00a0•\u00a0 📞 7259750939 \u00a0\u00a0\u00a0\u00a0\u00a0',
+  kn: '🌾 ಸಗಟು ವ್ಯಾಪಾರ \u00a0•\u00a0 🧪 ಕೀಟನಾಶಕ \u00a0•\u00a0 🌱 ಸಾವಯವ ಮತ್ತು ರಾಸಾಯನಿಕ ಗೊಬ್ಬರ \u00a0•\u00a0 🫘 ಗುಣಮಟ್ಟದ ಬೀಜ \u00a0•\u00a0 📦 ದೊಡ್ಡ ಆರ್ಡರ್ \u00a0•\u00a0 📞 7259750939 \u00a0\u00a0\u00a0\u00a0\u00a0'
+};
+
+function setLang(l) {
+  document.body.className = 'lang-' + l;
+  document.getElementById('ben').classList.toggle('active', l === 'en');
+  document.getElementById('bkn').classList.toggle('active', l === 'kn');
+
+  // Swap marquee text & font class — restart animation cleanly
+  const t = document.getElementById('mtrack');
+  t.textContent = MARQUEE_TEXT[l];
+  if (l === 'kn') {
+    t.classList.add('kn-track');
+  } else {
+    t.classList.remove('kn-track');
+  }
+  // Restart animation by toggling
+  t.style.animation = 'none';
+  t.offsetHeight; // reflow trigger
+  t.style.animation = '';
+}
+
+/* =================================================================
+   MENU
+   ================================================================= */
+function togMenu() {
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('drawer').classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var d = document.getElementById('drawer');
+  if (!d.classList.contains('open')) return;
+  if (!document.querySelector('nav').contains(e.target) &&
+      !d.contains(e.target)) closeMenu();
+});
+
+/* =================================================================
+   SCROLL REVEAL
+   ================================================================= */
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.07 });
+
+document.querySelectorAll('.rv').forEach(function(el, i) {
+  el.style.transitionDelay = (i % 4 * 0.07) + 's';
+  observer.observe(el);
+});
+
+/* =================================================================
+   GALLERY CAROUSEL
+   ================================================================= */
+var slides = [
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM.jpeg?updatedAt=1773511126596',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(1).jpeg?updatedAt=1773511126624',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.40%20PM%20(1).jpeg?updatedAt=1773511126452',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.38%20PM.jpeg?updatedAt=1773511126598',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.40%20PM.jpeg?updatedAt=1773511126443',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM%20(1).jpeg?updatedAt=1773511126437',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.33%20PM.jpeg?updatedAt=1773511126444',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.47%20PM%20(1).jpeg?updatedAt=1773511126450',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM%20(2).jpeg?updatedAt=1773511126387',
+   en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.33%20PM.jpeg?updatedAt=1773511126444',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.32%20PM.jpeg?updatedAt=1773511126088',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM.jpeg?updatedAt=1773511126370',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.46%20PM%20(2).jpeg?updatedAt=1773511126378',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM.jpeg?updatedAt=1773511126295',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM.jpeg?updatedAt=1773511126303',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.37%20PM%20(1).jpeg?updatedAt=1773511126271',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM.jpeg?updatedAt=1773511126238',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.42%20PM.jpeg?updatedAt=1773511126207',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM%20(1).jpeg?updatedAt=1773511126170',
+   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.43%20PM%20(1).jpeg?updatedAt=1773511126142',
+   en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.36%20PM.jpeg?updatedAt=1773511126116',
+   en:'Smart Farming', kn:'ಸ್ಮಾರ್ಟ್ ಕೃಷಿ', cen:'Modern Agriculture', ckn:'ಆಧುನಿಕ ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM%20(1).jpeg?updatedAt=1773511126116',
+   en:'Quality Seeds', kn:'ಗುಣಮಟ್ಟದ ಬೀಜ', cen:'Seeds', ckn:'ಬೀಜ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.43%20PM.jpeg?updatedAt=1773511126066',
+   en:'Fertilizers', kn:'ಗೊಬ್ಬರ ಸ್ಟಾಕ್', cen:'Fertilizers', ckn:'ಗೊಬ್ಬರ'}
+];
+
+var ci = 0, pInt = null, pv = 0, isPaused = false;
+var WAIT = 4000;
+
+function buildCarousel() {
+  var stage  = document.getElementById('cstage');
+  var dots   = document.getElementById('cdots');
+  var thumbs = document.getElementById('cthumbs');
+  var count  = document.getElementById('ccount');
+
+  slides.forEach(function(s, i) {
+    // Slide
+    var d = document.createElement('div');
+    d.className = 'cslide' + (i === 0 ? ' on' : '');
+    d.innerHTML =
+      '<img src="' + s.src + '" alt="' + s.en + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '">' +
+      '<div class="coverlay">' +
+        '<div class="ccat en">' + s.cen + '</div>' +
+        '<div class="ccat kn">' + s.ckn + '</div>' +
+        '<div class="ctitle en">' + s.en + '</div>' +
+        '<div class="ctitle kn">' + s.kn + '</div>' +
+      '</div>';
+    // Insert before the count badge (first fixed child)
+    stage.insertBefore(d, count);
+
+    // Dot
+    var dot = document.createElement('button');
+    dot.className = 'cdot' + (i === 0 ? ' on' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.addEventListener('click', (function(idx){ return function(){ go(idx); }; })(i));
+    dots.appendChild(dot);
+
+    // Thumb
+    var th = document.createElement('div');
+    th.className = 'cthumb' + (i === 0 ? ' on' : '');
+    th.innerHTML = '<img src="' + s.src + '" alt="" loading="lazy">';
+    th.addEventListener('click', (function(idx){ return function(){ go(idx); }; })(i));
+    thumbs.appendChild(th);
+  });
+
+  startAuto();
+
+  // Touch swipe
+  var sx = 0, sy = 0, st = 0;
+  stage.addEventListener('touchstart', function(e) {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    st = Date.now();
+  }, { passive: true });
+  stage.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 32 && Date.now() - st < 480) {
+      cm(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+
+  stage.addEventListener('mouseenter', function() { if (!isPaused) stopAuto(); });
+  stage.addEventListener('mouseleave', function() { if (!isPaused) startAuto(); });
+}
+
+function go(i) {
+  var sl = document.querySelectorAll('.cslide');
+  var dt = document.querySelectorAll('.cdot');
+  var th = document.querySelectorAll('.cthumb');
+  sl[ci].classList.remove('on');
+  dt[ci].classList.remove('on');
+  th[ci].classList.remove('on');
+  ci = (i + slides.length) % slides.length;
+  sl[ci].classList.add('on');
+  dt[ci].classList.add('on');
+  th[ci].classList.add('on');
+  // Scroll thumb strip
+  var thumbsEl = document.getElementById('cthumbs');
+  var offset = th[ci].offsetLeft - (thumbsEl.offsetWidth / 2) + (th[ci].offsetWidth / 2);
+  thumbsEl.scrollTo({ left: offset, behavior: 'smooth' });
+  document.getElementById('ccount').textContent = (ci + 1) + ' / ' + slides.length;
+  resetAuto();
+}
+
+function cm(d) { go(ci + d); }
+
+function togglePause() {
+  var btn = document.getElementById('cpause');
+  isPaused = !isPaused;
+  if (isPaused) {
+    stopAuto();
+    btn.textContent = '▶';
+    btn.classList.add('paused');
+    btn.setAttribute('aria-label', 'Play slideshow');
+  } else {
+    btn.textContent = '⏸';
+    btn.classList.remove('paused');
+    btn.setAttribute('aria-label', 'Pause slideshow');
+    startAuto();
+  }
+}
+
+function startAuto() {
+  if (isPaused) return;
+  stopAuto();
+  pv = 0;
+  document.getElementById('cprog').style.width = '0%';
+  pInt = setInterval(function() {
+    pv += 100 / (WAIT / 100);
+    document.getElementById('cprog').style.width = Math.min(pv, 100) + '%';
+    if (pv >= 100) cm(1);
+  }, 100);
+}
+function stopAuto()  { clearInterval(pInt); pv = 0; document.getElementById('cprog').style.width = '0%'; }
+function resetAuto() { if (!isPaused) { stopAuto(); startAuto(); } }
+
+/* =================================================================
+   INIT
+   ================================================================= */
+document.addEventListener('DOMContentLoaded', function() {
+  setLang('en');
+  buildCarousel();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowLeft')  cm(-1);
+  if (e.key === 'ArrowRight') cm(1);
+});
+</script>
+</body>
+</html>
