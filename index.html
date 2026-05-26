@@ -17,14 +17,12 @@
 html{
   scroll-behavior:smooth;
   -webkit-text-size-adjust:100%;
-  /* stop elastic bounce scroll pushing fixed elements */
   overscroll-behavior:none;
 }
 
 body{
   font-family:'Poppins',sans-serif;
   background:#fafde8;
-  /* never show horizontal scroll */
   overflow-x:hidden;
   overscroll-behavior-y:none;
 }
@@ -43,22 +41,20 @@ img{display:block;width:100%;height:100%;object-fit:cover;}
   --gl:#a8e063;
   --gold:#f5c518;
   --orange:#ff7043;
-  --nh:56px;          /* navbar height */
-  --bh:50px;          /* bottom bar height */
+  --nh:56px;
+  --bh:50px;
   --r:14px;
 }
 
 /* ============================================================
    LANGUAGE TOGGLE
-   Only ONE of .en / .kn is shown at a time.
-   We start with lang-en on <body> set immediately via inline script.
    ============================================================ */
 .kn{display:none;}
 body.lang-kn .en{display:none!important;}
 body.lang-kn .kn{display:revert!important;}
 
 /* ============================================================
-   NAV  — locked to its own GPU layer, never moves on scroll
+   NAV
    ============================================================ */
 nav{
   position:fixed;
@@ -73,9 +69,10 @@ nav{
   align-items:center;
   padding:0 14px;
   gap:8px;
-  /* GPU compositor layer — never repaints during scroll */
   transform:translateZ(0);
   -webkit-transform:translateZ(0);
+  /* prevent iOS rubber band from shifting nav */
+  will-change:transform;
 }
 
 .nav-logo{
@@ -87,6 +84,7 @@ nav{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  min-width:0;
 }
 
 .lang-toggle{
@@ -97,9 +95,8 @@ nav{
   border-radius:30px;
   overflow:hidden;
 }
-/* Fixed min-width so toggle never resizes when text changes */
 .lbtn{
-  min-width:36px;
+  min-width:38px;
   padding:5px 10px;
   font-size:11px;
   font-weight:700;
@@ -109,6 +106,9 @@ nav{
   white-space:nowrap;
   touch-action:manipulation;
   user-select:none;
+  line-height:1.2;
+  /* Prevent tap highlight flash shifting layout */
+  -webkit-tap-highlight-color:transparent;
 }
 .lbtn.active{
   background:var(--gold);
@@ -116,9 +116,8 @@ nav{
   border-radius:28px;
 }
 
-/* Hamburger — fixed 40×40 box, no shifting */
 .ham{
-  width:40px;height:40px;
+  width:44px;height:44px;
   flex-shrink:0;
   background:none;border:none;
   display:flex;flex-direction:column;
@@ -126,27 +125,28 @@ nav{
   gap:5px;
   touch-action:manipulation;
   user-select:none;
+  /* explicit padding ensures 44px tap target */
+  padding:0;
 }
 .ham span{
   display:block;
-  width:21px;height:2px;
+  width:22px;height:2px;
   background:white;border-radius:2px;
   transition:transform .28s,opacity .28s;
   transform-origin:center;
-  /* own layer so animation doesn't affect siblings */
   will-change:transform;
+  pointer-events:none;
 }
 .ham.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .ham.open span:nth-child(2){opacity:0;}
 .ham.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-/* Desktop nav links */
 .dlinks{display:none;gap:18px;list-style:none;}
 .dlinks a{color:rgba(255,255,255,.8);font-size:12.5px;font-weight:500;}
 .dlinks a:hover{color:var(--gold);}
 
 /* ============================================================
-   DRAWER  — slides in/out on its own GPU layer
+   DRAWER
    ============================================================ */
 .drawer{
   position:fixed;
@@ -155,12 +155,15 @@ nav{
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
   z-index:850;
-  /* hidden above viewport */
   transform:translateY(-110%) translateZ(0);
   -webkit-transform:translateY(-110%) translateZ(0);
   transition:transform .32s cubic-bezier(.4,0,.2,1);
   border-bottom:2px solid var(--gold);
   will-change:transform;
+  /* allow scrolling inside drawer if very short phone */
+  max-height:calc(100dvh - var(--nh));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 .drawer.open{
   transform:translateY(0) translateZ(0);
@@ -168,27 +171,30 @@ nav{
 }
 .drawer a{
   display:flex;align-items:center;gap:12px;
-  padding:15px 16px;
+  padding:16px;
   color:rgba(255,255,255,.88);
   font-size:15px;font-weight:600;
   border-bottom:1px solid rgba(255,255,255,.07);
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  /* 44px min touch target */
+  min-height:52px;
 }
 
 /* ============================================================
    HERO
    ============================================================ */
 .hero{
-  /* Static height — NOT 100vh/svh/dvh which change on scroll */
+  /* Use svh with vh fallback — avoids address-bar reflow on scroll */
   min-height:100vh;
+  min-height:100svh;
   padding:calc(var(--nh) + 40px) 16px calc(var(--bh) + 32px);
   display:flex;align-items:center;justify-content:center;
   text-align:center;
   position:relative;
   overflow:hidden;
   background:linear-gradient(155deg,#052b0e 0%,#1b6b30 55%,#0a3416 100%);
-  /* contain all child animations so they never paint outside */
   contain:layout style paint;
 }
 .hero::before{
@@ -198,7 +204,6 @@ nav{
   pointer-events:none;
 }
 
-/* Floating leaves — isolated, % based to avoid vh recalculation */
 .leaf{
   position:absolute;
   opacity:.08;
@@ -209,7 +214,7 @@ nav{
   backface-visibility:hidden;
 }
 @keyframes rise{
-  0%  {transform:translateY(120%) rotate(0deg);  opacity:0;}
+  0%  {transform:translateY(120%) rotate(0deg);opacity:0;}
   8%  {opacity:.08;}
   90% {opacity:.08;}
   100%{transform:translateY(-120%) rotate(380deg);opacity:0;}
@@ -236,7 +241,6 @@ nav{
   will-change:filter;
   backface-visibility:hidden;
 }
-/* filter:drop-shadow runs on GPU — no layout repaint */
 @keyframes glowPulse{
   0%,100%{filter:drop-shadow(0 0 8px rgba(245,197,24,.4));}
   50%     {filter:drop-shadow(0 0 24px rgba(245,197,24,.85));}
@@ -278,10 +282,9 @@ nav{
   gap:11px;align-items:center;
   width:100%;
 }
-/* Hero buttons: fixed height, no transform transitions */
 .hbtn1,.hbtn2{
   width:min(288px,100%);
-  height:50px;
+  height:52px;
   border-radius:50px;
   display:flex;align-items:center;justify-content:center;gap:8px;
   font-family:'Poppins',sans-serif;
@@ -289,7 +292,10 @@ nav{
   border:none;
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
   flex-shrink:0;
+  /* explicit cursor for iOS */
+  cursor:pointer;
 }
 .hbtn1{
   background:linear-gradient(135deg,var(--gold),#ce8f00);
@@ -301,7 +307,6 @@ nav{
   border:2px solid rgba(255,255,255,.38);
 }
 
-/* Scroll hint — own layer so bob never shifts page */
 .hscroll{
   position:absolute;bottom:16px;left:50%;
   transform:translateX(-50%);
@@ -310,6 +315,7 @@ nav{
   animation:bob 2.4s ease-in-out infinite;
   will-change:transform;
   backface-visibility:hidden;
+  white-space:nowrap;
 }
 @keyframes bob{
   0%,100%{transform:translateX(-50%) translateY(0);}
@@ -317,14 +323,15 @@ nav{
 }
 
 /* ============================================================
-   MARQUEE  — single-track approach, JS swaps content on lang change
-   Fixed height so it NEVER collapses or double-stacks
+   MARQUEE
    ============================================================ */
 .mbar{
   height:32px;
   background:var(--gold);
   overflow:hidden;
   position:relative;
+  /* prevent contents from causing layout shift */
+  contain:strict;
 }
 .mtrack{
   position:absolute;
@@ -333,7 +340,6 @@ nav{
   white-space:nowrap;
   display:flex;align-items:center;
   font-size:11.5px;font-weight:700;color:var(--green);letter-spacing:.4px;
-  /* start just off right edge */
   transform:translateX(100vw);
   animation:marqueeScroll 28s linear infinite;
   will-change:transform;
@@ -354,7 +360,7 @@ nav{
   border-bottom:3px solid var(--gold);
 }
 .stat{
-  text-align:center;padding:16px 6px;
+  text-align:center;padding:18px 6px;
   border-right:1px solid rgba(255,255,255,.1);
   border-bottom:1px solid rgba(255,255,255,.1);
 }
@@ -384,12 +390,12 @@ nav{
 .divbar{width:42px;height:3px;background:linear-gradient(to right,var(--gold),var(--orange));margin:9px auto 0;border-radius:2px;}
 
 /* ============================================================
-   REVEAL ON SCROLL
+   SCROLL REVEAL
    ============================================================ */
 .rv{
   opacity:0;
   transform:translateY(20px);
-  transition:opacity .5s ease, transform .5s ease;
+  transition:opacity .5s ease,transform .5s ease;
   will-change:opacity,transform;
 }
 .rv.visible{
@@ -451,20 +457,46 @@ nav{
 
 .cbox{max-width:860px;margin:0 auto;}
 
-/* Stage: position:relative so arrows anchor to the image area */
+/* FIXED: .cstage uses explicit relative positioning.
+   All dynamic slides insert BEFORE the static UI children
+   by using a dedicated .cslides-container div. */
 .cstage{
   position:relative;
   border-radius:16px;overflow:hidden;
   background:#181818;
-  width:100%;aspect-ratio:4/3;
+  width:100%;
+  /* Use aspect-ratio with a fallback min-height so it never collapses */
+  aspect-ratio:4/3;
+  min-height:220px;
   box-shadow:0 12px 44px rgba(0,0,0,.68);
+  /* prevent children from leaking during transitions */
+  isolation:isolate;
 }
+
+/* Dedicated slides layer — sits behind all UI controls */
+.cslides-layer{
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+
 .cslide{
   position:absolute;inset:0;
-  opacity:0;transition:opacity .45s ease;
+  opacity:0;
+  transition:opacity .45s ease;
+  pointer-events:none;
 }
-.cslide.on{opacity:1;}
-.cslide img{width:100%;height:100%;object-fit:cover;display:block;}
+.cslide.on{
+  opacity:1;
+  pointer-events:auto;
+}
+.cslide img{
+  width:100%;height:100%;
+  object-fit:cover;display:block;
+  /* prevent gap under img */
+  vertical-align:top;
+}
+
 .coverlay{
   position:absolute;bottom:0;left:0;right:0;
   background:linear-gradient(to top,rgba(0,0,0,.76),transparent);
@@ -476,73 +508,102 @@ nav{
 .ctitle{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;line-height:1.3;}
 .ctitle.kn{font-family:'Tiro Kannada',serif;font-size:.9rem;}
 
+/* UI controls layer — always on top */
+.cui-layer{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+.cui-layer > *{pointer-events:auto;}
+
 .ccount{
-  position:absolute;top:11px;right:11px;z-index:6;
+  position:absolute;top:11px;right:11px;
   background:rgba(0,0,0,.55);color:#fff;
   font-size:11px;font-weight:700;
   padding:3px 10px;border-radius:18px;
   backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
   pointer-events:none;
+  white-space:nowrap;
 }
 .cprog{
   position:absolute;bottom:0;left:0;height:3px;
-  background:var(--gold);z-index:6;
+  background:var(--gold);
   border-radius:0 2px 2px 0;
   transition:width .1s linear;
   pointer-events:none;
+  /* start at 0 width */
+  width:0%;
 }
 .cpause{
-  position:absolute;bottom:9px;right:10px;z-index:7;
-  width:26px;height:26px;border-radius:50%;border:none;
+  position:absolute;bottom:9px;right:10px;
+  width:32px;height:32px;border-radius:50%;border:none;
   background:rgba(0,0,0,.52);
-  color:#fff;font-size:10px;
+  color:#fff;font-size:12px;
   display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
   transition:background .2s;
   line-height:1;
+  cursor:pointer;
 }
 .cpause:hover{background:rgba(45,138,62,.85);}
 .cpause.paused{background:rgba(245,197,24,.85);color:var(--green);}
 
-/* Arrows inside .cstage so top:50% = 50% of image, never the whole box */
+/* Arrow buttons — large enough touch target on mobile */
 .carrow{
   position:absolute;
   top:50%;
   transform:translateY(-50%);
-  z-index:10;
-  width:38px;height:38px;
+  width:40px;height:40px;
   border-radius:50%;border:none;
   background:rgba(0,0,0,.6);color:#fff;
   font-size:22px;font-weight:700;
   display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
+  /* slightly larger tap target via padding */
+  padding:0;
 }
 .cprev{left:8px;}
 .cnext{right:8px;}
 .carrow:hover{background:rgba(45,138,62,.85);}
 
-/* Dots — fixed size, box-shadow highlight (no scale/transform) */
-.cdots{display:flex;justify-content:center;gap:7px;margin-top:14px;}
+/* Dots */
+.cdots{display:flex;justify-content:center;gap:7px;margin-top:14px;flex-wrap:wrap;}
 .cdot{
   width:8px;height:8px;border-radius:50%;
   background:rgba(255,255,255,.2);border:none;padding:0;
   flex-shrink:0;cursor:pointer;
   transition:background .2s,box-shadow .2s;
   touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  /* 44px minimum tap target area via invisible padding trick */
+  position:relative;
+}
+.cdot::after{
+  content:'';
+  position:absolute;
+  inset:-10px;
 }
 .cdot.on{background:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.3);}
 
-/* Thumbnails — border change only, no scale */
+/* Thumbnails */
 .cthumbs{
   display:flex;gap:7px;
   margin-top:9px;
   overflow-x:auto;
-  padding:2px 1px 6px;
+  padding:4px 1px 8px;
   scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
 }
 .cthumbs::-webkit-scrollbar{display:none;}
 .cthumb{
@@ -553,6 +614,7 @@ nav{
   opacity:.5;cursor:pointer;
   transition:border-color .2s,opacity .2s;
   touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
 .cthumb.on{border-color:var(--gold);opacity:1;}
 .cthumb img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -605,6 +667,8 @@ nav{
   display:flex;align-items:center;gap:11px;
   padding:11px 0;
   border-bottom:1px solid #f2f2f2;
+  /* min-height for touch target */
+  min-height:52px;
 }
 .crow:last-child{border-bottom:none;padding-bottom:0;}
 .crow:first-child{padding-top:0;}
@@ -614,8 +678,8 @@ nav{
   display:flex;align-items:center;justify-content:center;
   font-size:1.05rem;
 }
-.ig {background:#e8f5e9;} .io{background:#fff3e0;}
-.ib {background:#e3f2fd;} .igl{background:#fffde7;}
+.ig{background:#e8f5e9;} .io{background:#fff3e0;}
+.ib{background:#e3f2fd;} .igl{background:#fffde7;}
 .clbl{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
 .clbl.kn{font-family:'Tiro Kannada',serif;letter-spacing:0;font-size:10.5px;}
 .cval{font-size:14px;font-weight:600;color:var(--green);margin-top:1px;}
@@ -634,16 +698,17 @@ nav{
 .ctabox p.kn{font-family:'Tiro Kannada',serif;}
 
 .cbtns{display:flex;flex-direction:column;gap:9px;}
-/* Contact buttons: fixed height, no transforms */
 .cbtn{
-  width:100%;height:46px;
+  width:100%;height:50px;
   border:none;border-radius:50px;
   font-family:'Poppins',sans-serif;
   font-size:13px;font-weight:700;
   display:flex;align-items:center;justify-content:center;gap:7px;
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
   flex-shrink:0;
+  cursor:pointer;
 }
 .cbtn-y {background:var(--gold);color:var(--green);}
 .cbtn-y2{background:#c98f00;color:var(--green);}
@@ -654,7 +719,6 @@ nav{
    ============================================================ */
 footer{
   background:#061309;
-  /* bottom padding = bbar height + safe area + breathing room */
   padding:28px 16px calc(var(--bh) + env(safe-area-inset-bottom) + 16px);
   text-align:center;
 }
@@ -665,24 +729,20 @@ footer{
 
 /* ============================================================
    FLOATING ACTION BUTTONS
-   Each button has a fixed 56×56 wrapper that absorbs the
-   ring overflow — so the ring animation NEVER shifts siblings
    ============================================================ */
 .fwrap{
   position:fixed;
-  /* Sits above bbar with consistent gap */
   bottom:calc(var(--bh) + env(safe-area-inset-bottom) + 12px);
   right:13px;
   z-index:990;
   display:flex;flex-direction:column;
   align-items:center;
   gap:10px;
-  /* Own GPU layer — completely decoupled from scroll */
   transform:translateZ(0);
   -webkit-transform:translateZ(0);
+  will-change:transform;
 }
 
-/* Fixed-size wrapper — absorbs ring overflow */
 .fab-wrap{
   width:56px;height:56px;
   position:relative;
@@ -699,15 +759,15 @@ footer{
   flex-shrink:0;
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
 }
 .fab-wa{background:#25d366;}
 .fab-call{background:linear-gradient(135deg,var(--gm),var(--green));}
 
-/* Ring is inside .fab-wrap, scales within the 56px box,
-   never touches .fwrap layout at all */
 .ring{
   position:absolute;
-  inset:4px;           /* starts at same size as .fab */
+  inset:4px;
   border-radius:50%;
   border:2px solid var(--gb);
   animation:ringPulse 2s ease-out infinite;
@@ -716,24 +776,24 @@ footer{
   backface-visibility:hidden;
 }
 @keyframes ringPulse{
-  0%  {transform:scale(1);  opacity:.7;}
+  0%  {transform:scale(1);opacity:.7;}
   100%{transform:scale(1.5);opacity:0;}
 }
 
 /* ============================================================
-   BOTTOM BAR  — locked height, GPU layer
+   BOTTOM BAR
    ============================================================ */
 .bbar{
   position:fixed;
   bottom:0;left:0;right:0;
   z-index:880;
   display:flex;
-  /* Exact known height — never reflows */
   height:calc(var(--bh) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
   box-shadow:0 -2px 12px rgba(0,0,0,.15);
   transform:translateZ(0);
   -webkit-transform:translateZ(0);
+  will-change:transform;
 }
 .bbar a{
   flex:1;
@@ -741,6 +801,9 @@ footer{
   font-size:14px;font-weight:700;
   touch-action:manipulation;
   user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  /* 44px minimum height */
+  min-height:44px;
 }
 .bc{background:var(--gm);color:#fff;}
 .bw{background:#25d366;color:#fff;}
@@ -758,7 +821,7 @@ footer{
   .nav-logo{font-size:1.1rem;}
 
   .stats{grid-template-columns:repeat(4,1fr);}
-  .stat{border-bottom:none!important;}
+  .stat{border-bottom:none!important;padding:22px 6px;}
   .stat:nth-child(2n){border-right:1px solid rgba(255,255,255,.1)!important;}
   .stat:last-child{border-right:none!important;}
 
@@ -773,7 +836,7 @@ footer{
 
   .wgrid{grid-template-columns:repeat(4,1fr);gap:16px;}
 
-  .cstage{aspect-ratio:16/9;}
+  .cstage{aspect-ratio:16/9;min-height:0;}
   .cthumb{width:88px;height:62px;}
   .carrow{width:46px;height:46px;font-size:24px;}
   .cprev{left:12px;}
@@ -790,18 +853,24 @@ footer{
 
   .hero{min-height:100vh;padding-bottom:64px;}
 }
+
+/* ============================================================
+   EXTRA SMALL PHONES  ≤360px
+   ============================================================ */
+@media(max-width:360px){
+  .nav-logo{font-size:.88rem;}
+  .pgrid{gap:8px;}
+  .pname{font-size:.78rem;}
+  .pdesc{font-size:9.5px;}
+  .wgrid{gap:8px;}
+  .wtxt{font-size:10px;}
+}
 </style>
 </head>
 
-<!-- Set lang immediately before body renders to avoid flash -->
 <script>document.documentElement.className='lang-en';</script>
 
 <body class="lang-en">
-
-<!-- ============================================================
-     FLOATING LEAVES (inside hero via CSS contain, so they can't
-     affect layout outside)
-     ============================================================ -->
 
 <!-- NAV -->
 <nav>
@@ -833,7 +902,6 @@ footer{
 
 <!-- HERO -->
 <section class="hero">
-  <!-- Leaves are inside hero so contain:paint keeps them here -->
   <span class="leaf" style="left:5%;animation-duration:13s;">🌿</span>
   <span class="leaf" style="left:24%;animation-duration:17s;animation-delay:4s;font-size:1.6rem;">🍃</span>
   <span class="leaf" style="left:54%;animation-duration:11s;animation-delay:7s;font-size:1.1rem;">🌱</span>
@@ -857,7 +925,7 @@ footer{
   <div class="hscroll" aria-hidden="true">▼ SCROLL ▼</div>
 </section>
 
-<!-- MARQUEE — single track, JS updates text on lang switch -->
+<!-- MARQUEE -->
 <div class="mbar" aria-hidden="true">
   <div class="mtrack" id="mtrack">
     🌾 WHOLESALE DEALER &nbsp;•&nbsp; 🧪 ALL PESTICIDES &nbsp;•&nbsp; 🌱 ORGANIC &amp; CHEMICAL FERTILIZERS &nbsp;•&nbsp; 🫘 QUALITY SEEDS &nbsp;•&nbsp; 📦 BULK ORDERS &nbsp;•&nbsp; ✅ GST REGISTERED &nbsp;•&nbsp; 📞 7259750939 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -867,9 +935,9 @@ footer{
 <!-- STATS -->
 <div class="stats">
   <div class="stat"><div class="stn">500+</div><div class="stl en">Happy Farmers</div><div class="stl kn">ಸಂತೃಪ್ತ ರೈತರು</div></div>
-  <div class="stat"><div class="stn">50+</div> <div class="stl en">Products</div>      <div class="stl kn">ಉತ್ಪನ್ನ ವಿಧ</div></div>
-  <div class="stat"><div class="stn">10+</div> <div class="stl en">Years Exp.</div>    <div class="stl kn">ವರ್ಷ ಅನುಭವ</div></div>
-  <div class="stat"><div class="stn">24/7</div><div class="stl en">Support</div>       <div class="stl kn">ಸೇವೆ</div></div>
+  <div class="stat"><div class="stn">50+</div><div class="stl en">Products</div><div class="stl kn">ಉತ್ಪನ್ನ ವಿಧ</div></div>
+  <div class="stat"><div class="stn">10+</div><div class="stl en">Years Exp.</div><div class="stl kn">ವರ್ಷ ಅನುಭವ</div></div>
+  <div class="stat"><div class="stn">24/7</div><div class="stl en">Support</div><div class="stl kn">ಸೇವೆ</div></div>
 </div>
 
 <!-- PRODUCTS -->
@@ -917,12 +985,23 @@ footer{
     <div class="divbar"></div>
   </div>
   <div class="cbox">
+    <!--
+      FIXED STRUCTURE:
+      .cstage
+        .cslides-layer  ← JS appends .cslide divs here (z-index:1)
+        .cui-layer      ← static controls always on top (z-index:2)
+    -->
     <div class="cstage" id="cstage">
-      <span class="ccount" id="ccount">1 / 5</span>
-      <div  class="cprog"  id="cprog"></div>
-      <button class="cpause" id="cpause" onclick="togglePause()" aria-label="Pause slideshow">⏸</button>
-      <button class="carrow cprev" onclick="cm(-1)" aria-label="Previous slide">&#8249;</button>
-      <button class="carrow cnext" onclick="cm(1)"  aria-label="Next slide">&#8250;</button>
+      <!-- Slides layer — populated by JS -->
+      <div class="cslides-layer" id="cslides-layer"></div>
+      <!-- UI controls layer — always on top, never re-ordered -->
+      <div class="cui-layer">
+        <span class="ccount" id="ccount">1 / 1</span>
+        <div  class="cprog"  id="cprog"></div>
+        <button class="cpause" id="cpause" onclick="togglePause()" aria-label="Pause slideshow">⏸</button>
+        <button class="carrow cprev" onclick="cm(-1)" aria-label="Previous slide">&#8249;</button>
+        <button class="carrow cnext" onclick="cm(1)"  aria-label="Next slide">&#8250;</button>
+      </div>
     </div>
     <div class="cdots"   id="cdots"></div>
     <div class="cthumbs" id="cthumbs"></div>
@@ -985,13 +1064,11 @@ footer{
 
 <!-- FLOATING ACTION BUTTONS -->
 <div class="fwrap">
-  <!-- WhatsApp -->
   <div class="fab-wrap">
     <a href="https://wa.me/917259750939?text=Hello%20Mitra%20Enterprises" target="_blank" rel="noopener" class="fab fab-wa" aria-label="WhatsApp">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
   </div>
-  <!-- Call (with ring pulse) -->
   <div class="fab-wrap">
     <div class="ring" aria-hidden="true"></div>
     <a href="tel:7259750939" class="fab fab-call" aria-label="Call us">
@@ -1015,9 +1092,8 @@ footer{
 <script>
 /* =================================================================
    LANGUAGE
-   setLang() swaps body class, toggles buttons, updates marquee text
    ================================================================= */
-const MARQUEE_TEXT = {
+var MARQUEE_TEXT = {
   en: '🌾 WHOLESALE DEALER \u00a0•\u00a0 🧪 ALL PESTICIDES \u00a0•\u00a0 🌱 ORGANIC & CHEMICAL FERTILIZERS \u00a0•\u00a0 🫘 QUALITY SEEDS \u00a0•\u00a0 📦 BULK ORDERS \u00a0•\u00a0 ✅ GST REGISTERED \u00a0•\u00a0 📞 7259750939 \u00a0\u00a0\u00a0\u00a0\u00a0',
   kn: '🌾 ಸಗಟು ವ್ಯಾಪಾರ \u00a0•\u00a0 🧪 ಕೀಟನಾಶಕ \u00a0•\u00a0 🌱 ಸಾವಯವ ಮತ್ತು ರಾಸಾಯನಿಕ ಗೊಬ್ಬರ \u00a0•\u00a0 🫘 ಗುಣಮಟ್ಟದ ಬೀಜ \u00a0•\u00a0 📦 ದೊಡ್ಡ ಆರ್ಡರ್ \u00a0•\u00a0 📞 7259750939 \u00a0\u00a0\u00a0\u00a0\u00a0'
 };
@@ -1026,18 +1102,11 @@ function setLang(l) {
   document.body.className = 'lang-' + l;
   document.getElementById('ben').classList.toggle('active', l === 'en');
   document.getElementById('bkn').classList.toggle('active', l === 'kn');
-
-  // Swap marquee text & font class — restart animation cleanly
-  const t = document.getElementById('mtrack');
+  var t = document.getElementById('mtrack');
   t.textContent = MARQUEE_TEXT[l];
-  if (l === 'kn') {
-    t.classList.add('kn-track');
-  } else {
-    t.classList.remove('kn-track');
-  }
-  // Restart animation by toggling
+  t.classList.toggle('kn-track', l === 'kn');
   t.style.animation = 'none';
-  t.offsetHeight; // reflow trigger
+  t.offsetHeight;
   t.style.animation = '';
 }
 
@@ -1055,135 +1124,95 @@ function closeMenu() {
 document.addEventListener('click', function(e) {
   var d = document.getElementById('drawer');
   if (!d.classList.contains('open')) return;
-  if (!document.querySelector('nav').contains(e.target) &&
-      !d.contains(e.target)) closeMenu();
+  if (!document.querySelector('nav').contains(e.target) && !d.contains(e.target)) closeMenu();
 });
 
 /* =================================================================
    SCROLL REVEAL
    ================================================================= */
-var observer = new IntersectionObserver(function(entries) {
+var rvObserver = new IntersectionObserver(function(entries) {
   entries.forEach(function(entry) {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
+      rvObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.07 });
 
 document.querySelectorAll('.rv').forEach(function(el, i) {
   el.style.transitionDelay = (i % 4 * 0.07) + 's';
-  observer.observe(el);
+  rvObserver.observe(el);
 });
 
 /* =================================================================
    GALLERY CAROUSEL
+   Deduped slides — removed exact-duplicate URLs
    ================================================================= */
 var slides = [
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(1).jpeg?updatedAt=1773511126624',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.10%20PM.jpeg?updatedAt=1779808666434',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(1).jpeg?updatedAt=1779808666572',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.38%20PM.jpeg?updatedAt=1773511126598',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.40%20PM.jpeg?updatedAt=1773511126443',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM%20(1).jpeg?updatedAt=1773511126437',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.33%20PM.jpeg?updatedAt=1773511126444',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.47%20PM%20(1).jpeg?updatedAt=1773511126450',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM%20(2).jpeg?updatedAt=1773511126387',
-   en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.33%20PM.jpeg?updatedAt=1773511126444',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.32%20PM.jpeg?updatedAt=1773511126088',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM.jpeg?updatedAt=1773511126370',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.46%20PM%20(2).jpeg?updatedAt=1773511126378',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM.jpeg?updatedAt=1773511126295',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM.jpeg?updatedAt=1773511126303',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.37%20PM%20(1).jpeg?updatedAt=1773511126271',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM.jpeg?updatedAt=1773511126238',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.42%20PM.jpeg?updatedAt=1773511126207',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM%20(1).jpeg?updatedAt=1773511126170',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.43%20PM%20(1).jpeg?updatedAt=1773511126142',
-   en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.36%20PM.jpeg?updatedAt=1773511126116',
-   en:'Smart Farming', kn:'ಸ್ಮಾರ್ಟ್ ಕೃಷಿ', cen:'Modern Agriculture', ckn:'ಆಧುನಿಕ ಕೃಷಿ'},
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM%20(1).jpeg?updatedAt=1773511126116',
-   en:'Quality Seeds', kn:'ಗುಣಮಟ್ಟದ ಬೀಜ', cen:'Seeds', ckn:'ಬೀಜ'},
-
-
-    {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(3).jpeg?updatedAt=1779808666407',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM.jpeg?updatedAt=1779808666105',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM%20(2).jpeg?updatedAt=1779808666104',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.07%20PM.jpeg?updatedAt=1779808666118',
-   en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM%20(1).jpeg?updatedAt=1779808666131',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-   {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM.jpeg?updatedAt=1779808666326',
-   en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
-  
-  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(3).jpeg?updatedAt=1779808666407',
-   en:'Fertilizers', kn:'ಗೊಬ್ಬರ ಸ್ಟಾಕ್', cen:'Fertilizers', ckn:'ಗೊಬ್ಬರ'}
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(1).jpeg?updatedAt=1773511126624', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.10%20PM.jpeg?updatedAt=1779808666434', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(1).jpeg?updatedAt=1779808666572', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.38%20PM.jpeg?updatedAt=1773511126598', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.40%20PM.jpeg?updatedAt=1773511126443', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM%20(1).jpeg?updatedAt=1773511126437', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.45%20PM%20(2).jpeg?updatedAt=1773511126426', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.33%20PM.jpeg?updatedAt=1773511126444', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.47%20PM%20(1).jpeg?updatedAt=1773511126450', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM%20(2).jpeg?updatedAt=1773511126387', en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.32%20PM.jpeg?updatedAt=1773511126088', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM.jpeg?updatedAt=1773511126370', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.46%20PM%20(2).jpeg?updatedAt=1773511126378', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.39%20PM.jpeg?updatedAt=1773511126295', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM.jpeg?updatedAt=1773511126303', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.37%20PM%20(1).jpeg?updatedAt=1773511126271', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.34%20PM.jpeg?updatedAt=1773511126238', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.42%20PM.jpeg?updatedAt=1773511126207', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.44%20PM%20(1).jpeg?updatedAt=1773511126170', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.43%20PM%20(1).jpeg?updatedAt=1773511126142', en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.36%20PM.jpeg?updatedAt=1773511126116', en:'Smart Farming', kn:'ಸ್ಮಾರ್ಟ್ ಕೃಷಿ', cen:'Modern Agriculture', ckn:'ಆಧುನಿಕ ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/WhatsApp%20Image%202026-03-14%20at%207.19.35%20PM%20(1).jpeg?updatedAt=1773511126116', en:'Quality Seeds', kn:'ಗುಣಮಟ್ಟದ ಬೀಜ', cen:'Seeds', ckn:'ಬೀಜ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(3).jpeg?updatedAt=1779808666407', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM.jpeg?updatedAt=1779808666105', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM%20(2).jpeg?updatedAt=1779808666104', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.07%20PM.jpeg?updatedAt=1779808666118', en:'Paddy Fields', kn:'ಭತ್ತದ ಗದ್ದೆ', cen:'Agriculture', ckn:'ಕೃಷಿ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.08%20PM%20(1).jpeg?updatedAt=1779808666131', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM.jpeg?updatedAt=1779808666326', en:'Pesticide Products', kn:'ಕೀಟನಾಶಕ ಉತ್ಪನ್ನಗಳು', cen:'Crop Protection', ckn:'ಬೆಳೆ ರಕ್ಷಣೆ'},
+  {src:'https://ik.imagekit.io/2bihaekhf/product%20images/New%20add%20on/WhatsApp%20Image%202026-05-26%20at%208.46.09%20PM%20(3).jpeg?updatedAt=1779808666407', en:'Fertilizers', kn:'ಗೊಬ್ಬರ ಸ್ಟಾಕ್', cen:'Fertilizers', ckn:'ಗೊಬ್ಬರ'}
 ];
 
 var ci = 0, pInt = null, pv = 0, isPaused = false;
 var WAIT = 4000;
 
 function buildCarousel() {
-  var stage  = document.getElementById('cstage');
+  var layer  = document.getElementById('cslides-layer');
   var dots   = document.getElementById('cdots');
   var thumbs = document.getElementById('cthumbs');
   var count  = document.getElementById('ccount');
 
+  count.textContent = '1 / ' + slides.length;
+
   slides.forEach(function(s, i) {
-    // Slide
+    /* ---- Slide ---- */
     var d = document.createElement('div');
     d.className = 'cslide' + (i === 0 ? ' on' : '');
     d.innerHTML =
-      '<img src="' + s.src + '" alt="' + s.en + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '">' +
+      '<img src="' + s.src + '" alt="' + s.en + '" loading="' + (i < 3 ? 'eager' : 'lazy') + '">' +
       '<div class="coverlay">' +
         '<div class="ccat en">' + s.cen + '</div>' +
         '<div class="ccat kn">' + s.ckn + '</div>' +
         '<div class="ctitle en">' + s.en + '</div>' +
         '<div class="ctitle kn">' + s.kn + '</div>' +
       '</div>';
-    // Insert before the count badge (first fixed child)
-    stage.insertBefore(d, count);
+    layer.appendChild(d);
 
-    // Dot
+    /* ---- Dot ---- */
     var dot = document.createElement('button');
     dot.className = 'cdot' + (i === 0 ? ' on' : '');
     dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
     dot.addEventListener('click', (function(idx){ return function(){ go(idx); }; })(i));
     dots.appendChild(dot);
 
-    // Thumb
+    /* ---- Thumb ---- */
     var th = document.createElement('div');
     th.className = 'cthumb' + (i === 0 ? ' on' : '');
     th.innerHTML = '<img src="' + s.src + '" alt="" loading="lazy">';
@@ -1193,7 +1222,8 @@ function buildCarousel() {
 
   startAuto();
 
-  // Touch swipe
+  /* Touch swipe on the whole stage */
+  var stage = document.getElementById('cstage');
   var sx = 0, sy = 0, st = 0;
   stage.addEventListener('touchstart', function(e) {
     sx = e.touches[0].clientX;
@@ -1213,20 +1243,29 @@ function buildCarousel() {
 }
 
 function go(i) {
-  var sl = document.querySelectorAll('.cslide');
-  var dt = document.querySelectorAll('.cdot');
-  var th = document.querySelectorAll('.cthumb');
+  /* Use the dedicated layers — not querySelectorAll which can grab wrong elements */
+  var layer  = document.getElementById('cslides-layer');
+  var dots   = document.getElementById('cdots');
+  var thumbs = document.getElementById('cthumbs');
+
+  var sl = layer.querySelectorAll('.cslide');
+  var dt = dots.querySelectorAll('.cdot');
+  var th = thumbs.querySelectorAll('.cthumb');
+
   sl[ci].classList.remove('on');
   dt[ci].classList.remove('on');
   th[ci].classList.remove('on');
-  ci = (i + slides.length) % slides.length;
+
+  ci = ((i % slides.length) + slides.length) % slides.length;
+
   sl[ci].classList.add('on');
   dt[ci].classList.add('on');
   th[ci].classList.add('on');
-  // Scroll thumb strip
-  var thumbsEl = document.getElementById('cthumbs');
-  var offset = th[ci].offsetLeft - (thumbsEl.offsetWidth / 2) + (th[ci].offsetWidth / 2);
-  thumbsEl.scrollTo({ left: offset, behavior: 'smooth' });
+
+  /* Scroll thumb strip to keep active thumb visible */
+  var offset = th[ci].offsetLeft - (thumbs.offsetWidth / 2) + (th[ci].offsetWidth / 2);
+  thumbs.scrollTo({ left: offset, behavior: 'smooth' });
+
   document.getElementById('ccount').textContent = (ci + 1) + ' / ' + slides.length;
   resetAuto();
 }
@@ -1253,14 +1292,20 @@ function startAuto() {
   if (isPaused) return;
   stopAuto();
   pv = 0;
-  document.getElementById('cprog').style.width = '0%';
+  var prog = document.getElementById('cprog');
+  prog.style.width = '0%';
   pInt = setInterval(function() {
     pv += 100 / (WAIT / 100);
-    document.getElementById('cprog').style.width = Math.min(pv, 100) + '%';
+    prog.style.width = Math.min(pv, 100) + '%';
     if (pv >= 100) cm(1);
   }, 100);
 }
-function stopAuto()  { clearInterval(pInt); pv = 0; document.getElementById('cprog').style.width = '0%'; }
+function stopAuto() {
+  clearInterval(pInt);
+  pv = 0;
+  var prog = document.getElementById('cprog');
+  if (prog) prog.style.width = '0%';
+}
 function resetAuto() { if (!isPaused) { stopAuto(); startAuto(); } }
 
 /* =================================================================
